@@ -225,7 +225,7 @@ public typealias MentionToPass = (userId: Int, name: String)
         case .cancelled:
             updateAttributesWhenSelected(false)
             selectedElement = nil
-        case .stationary:
+        default:
             break
         }
 
