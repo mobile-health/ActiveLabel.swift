@@ -194,7 +194,7 @@ public typealias MentionToPass = (userId: Int, name: String)
         var avoidSuperCall = false
 
         switch touch.phase {
-        case .began, .moved:
+        case .began, .moved, .regionEntered, .regionMoved:
             if let element = element(at: location) {
                 if element.range.location != selectedElement?.range.location || element.range.length != selectedElement?.range.length {
                     updateAttributesWhenSelected(false)
@@ -206,7 +206,7 @@ public typealias MentionToPass = (userId: Int, name: String)
                 updateAttributesWhenSelected(false)
                 selectedElement = nil
             }
-        case .ended:
+        case .ended, .regionExited:
             guard let selectedElement = selectedElement else { return avoidSuperCall }
 
             switch selectedElement.element {
@@ -225,7 +225,9 @@ public typealias MentionToPass = (userId: Int, name: String)
         case .cancelled:
             updateAttributesWhenSelected(false)
             selectedElement = nil
-        default:
+        case .stationary:
+            break
+        @unknown default:
             break
         }
 
