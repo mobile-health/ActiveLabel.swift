@@ -52,6 +52,9 @@ public typealias MentionToPass = (userId: Int, name: String)
     open var customSelectedColor: [ActiveType : UIColor] = [:] {
         didSet { updateTextStorage(parseText: false) }
     }
+    open var customFont: [ActiveType : UIFont] = [:] {
+        didSet { updateTextStorage(parseText: false) }
+    }
     @IBInspectable public var lineSpacing: CGFloat = 0 {
         didSet { updateTextStorage(parseText: false) }
     }
@@ -316,18 +319,22 @@ public typealias MentionToPass = (userId: Int, name: String)
         attributes[NSAttributedString.Key.foregroundColor] = mentionColor
 
         for (type, elements) in activeElements {
+            
+            if let highlightFont = hightlightFont {
+                attributes[NSAttributedString.Key.font] = highlightFont
+            }
 
             switch type {
             case .mention: attributes[NSAttributedString.Key.foregroundColor] = mentionColor
             case .hashtag: attributes[NSAttributedString.Key.foregroundColor] = hashtagColor
             case .url: attributes[NSAttributedString.Key.foregroundColor] = URLColor
-            case .custom: attributes[NSAttributedString.Key.foregroundColor] = customColor[type] ?? defaultCustomColor
+            case .custom:
+                attributes[NSAttributedString.Key.foregroundColor] = customColor[type] ?? defaultCustomColor
+                if let customFont = customFont[type] {
+                    attributes[NSAttributedString.Key.font] = customFont
+                }
             }
             
-            if let highlightFont = hightlightFont {
-                attributes[NSAttributedString.Key.font] = highlightFont
-            }
-			
             if let configureLinkAttribute = configureLinkAttribute {
                 attributes = configureLinkAttribute(type, attributes, false)
             }
@@ -394,6 +401,10 @@ public typealias MentionToPass = (userId: Int, name: String)
         
         var attributes = textStorage.attributes(at: 0, effectiveRange: nil)
         let type = selectedElement.type
+        
+        if let highlightFont = hightlightFont {
+            attributes[NSAttributedString.Key.font] = highlightFont
+        }
 
         if isSelected {
             let selectedColor: UIColor
@@ -404,6 +415,9 @@ public typealias MentionToPass = (userId: Int, name: String)
             case .custom:
                 let possibleSelectedColor = customSelectedColor[selectedElement.type] ?? customColor[selectedElement.type]
                 selectedColor = possibleSelectedColor ?? defaultCustomColor
+                if let customFont = customFont[type] {
+                    attributes[NSAttributedString.Key.font] = customFont
+                }
             }
             attributes[NSAttributedString.Key.foregroundColor] = selectedColor
         } else {
@@ -412,13 +426,13 @@ public typealias MentionToPass = (userId: Int, name: String)
             case .mention: unselectedColor = mentionColor
             case .hashtag: unselectedColor = hashtagColor
             case .url: unselectedColor = URLColor
-            case .custom: unselectedColor = customColor[selectedElement.type] ?? defaultCustomColor
+            case .custom:
+                unselectedColor = customColor[selectedElement.type] ?? defaultCustomColor
+                if let customFont = customFont[type] {
+                    attributes[NSAttributedString.Key.font] = customFont
+                }
             }
             attributes[NSAttributedString.Key.foregroundColor] = unselectedColor
-        }
-        
-        if let highlightFont = hightlightFont {
-            attributes[NSAttributedString.Key.font] = highlightFont
         }
         
         if let configureLinkAttribute = configureLinkAttribute {
