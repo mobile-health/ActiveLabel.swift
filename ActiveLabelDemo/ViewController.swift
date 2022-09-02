@@ -27,9 +27,16 @@ class ViewController: UIViewController {
         label.urlMaximumLength = 31
 
         label.customize { label in
-            label.text = "This is a post with #multiple #hashtags and a @userhandle. Links are also supported like" +
-            " this one: http://optonaut.co. Now it also supports custom patterns -> are\n\n" +
-                "Let's trim a long link: \nhttps://twitter.com/twicket_app/status/649678392372121601"
+            label.text =
+            "\n[ https://regex101.com/ ](Link) \n\n" +
+            "This is a post with #multiple #hashtags and a @userhandle. Links are also supported like" +
+            " this one: http://optonaut.co. Now it also supports custom patterns -> are\n" +
+            "[ https://www.google.fr ](TEST) \n" +
+            "[ https://teams.microsoft.com ](TEST) \n" +
+
+                "Let's trim a long link: \nhttps://twitter.com/twicket_app/status/649678392372121601\n\n" +
+            "---> #another <----"
+            
             label.numberOfLines = 0
             label.lineSpacing = 4
             
@@ -66,7 +73,7 @@ class ViewController: UIViewController {
             label.handleCustomTap(for: customType3) { self.alert("Custom type", message: $0) }
         }
 
-        label.frame = CGRect(x: 20, y: 40, width: view.frame.width - 40, height: 300)
+        label.frame = CGRect(x: 20, y: 40, width: view.frame.width - 40, height: view.frame.height-20)
         view.addSubview(label)
         
         

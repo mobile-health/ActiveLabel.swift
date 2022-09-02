@@ -27,20 +27,34 @@ struct ActiveBuilder {
         let type = ActiveType.url
         var text = text
         let matches = RegexParser.getElements(from: text, with: type.pattern, range: range)
-        let nsstring = text as NSString
         var elements: [ElementTuple] = []
 
         for match in matches where match.range.length > 2 {
-            let word = nsstring.substring(with: match.range)
+            let word = (text as NSString).substring(with: match.range)
                 .trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
-
+            
+            // handle url markdown [ URL ](link)
+            if let (markdown, link) = text.extractLinkMarkdown(url: word) {
+                
+                let startRange = (text as NSString).range(of: markdown).lowerBound
+                text = text.replacingOccurrences(of: markdown, with: link)
+                let length = text.count - startRange
+                
+                let newRange = (text as NSString).range(of: link, range: NSRange(location: startRange, length: length))
+                let element = ActiveElement.url(original: word, trimmed: link)
+                                
+                elements.append((newRange, element, type))
+                continue
+            }
+            
             guard let maxLenght = maximumLenght, word.count > maxLenght else {
                 let range = maximumLenght == nil ? match.range : (text as NSString).range(of: word)
                 let element = ActiveElement.create(with: type, text: word)
                 elements.append((range, element, type))
                 continue
             }
-
+            
+            // Handle trimmed link
             let trimmedWord = word.trim(to: maxLenght)
             text = text.replacingOccurrences(of: word, with: trimmedWord)
 
