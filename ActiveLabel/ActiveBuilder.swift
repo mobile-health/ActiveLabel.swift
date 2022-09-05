@@ -12,14 +12,14 @@ typealias ActiveFilterPredicate = ((String) -> Bool)
 
 struct ActiveBuilder {
     
-    static func createElements(type: ActiveType, from text: String, range: NSRange, filterPredicate: ActiveFilterPredicate?, mentionsArray: [MentionToPass]?) -> [ElementTuple] {
+    static func createElements(type: ActiveType, from text: String, range: NSRange, filterPredicate: ActiveFilterPredicate?, mentionsArray: [MentionToPass]?, linksIndex: [Int]?) -> [ElementTuple] {
         switch type {
         case .mention, .hashtag:
             return createElementsIgnoringFirstCharacter(from: text, for: type, range: range, filterPredicate: filterPredicate)
         case .url:
             return createElements(from: text, for: type, range: range, filterPredicate: filterPredicate, mentions: mentionsArray )
         case .custom:
-            return createElements(from: text, for: type, range: range, minLength: 1, filterPredicate: filterPredicate, mentions: mentionsArray)
+            return createElements(from: text, for: type, range: range, minLength: 1, filterPredicate: filterPredicate, mentions: mentionsArray, linksIndex: linksIndex)
         }
     }
 
@@ -70,7 +70,8 @@ struct ActiveBuilder {
                                        range: NSRange,
                                        minLength: Int = 2,
                                        filterPredicate: ActiveFilterPredicate?,
-                                       mentions: [MentionToPass]?) -> [ElementTuple]{
+                                       mentions: [MentionToPass]?,
+                                       linksIndex: [Int]? = nil) -> [ElementTuple] {
         
         let matches = RegexParser.getElements(from: text, with: type.pattern, range: range)
         let nsstring = text as NSString
@@ -94,6 +95,12 @@ struct ActiveBuilder {
                 if word.hasPrefix("#"), filterPredicate?(word) ?? true {
                     let element = ActiveElement.create(with: type, text: word, id: id)
                     elements.append((match.range, element, type))
+                }
+                else if filterPredicate?(word) ?? true {
+                    let element = ActiveElement.create(with: type, text: word)
+                    if ((linksIndex?.contains(match.range.location)) != nil)  {
+                        elements.append((match.range, element, type))
+                    }
                 }
             }
         }
