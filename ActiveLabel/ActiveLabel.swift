@@ -24,6 +24,7 @@ public typealias MentionToPass = (userId: Int, name: String)
 
     open var enabledTypes: [ActiveType] = [.mention, .hashtag, .url]
     open var mentionsArray: [MentionToPass]?
+    open var linksIndex: [Int]?
     open var urlMaximumLength: Int?
     
     open var configureLinkAttribute: ConfigureLinkAttribute?
@@ -90,7 +91,7 @@ public typealias MentionToPass = (userId: Int, name: String)
     open func handleCustomTap(for type: ActiveType, handler: @escaping (String) -> ()) {
         customTapHandlers[type] = handler
     }
-	
+    
     open func removeHandle(for type: ActiveType) {
         switch type {
         case .hashtag:
@@ -368,7 +369,7 @@ public typealias MentionToPass = (userId: Int, name: String)
             } else if type == .hashtag {
                 filter = hashtagFilterPredicate
             }
-            let hashtagElements = ActiveBuilder.createElements(type: type, from: textString, range: textRange, filterPredicate: filter, mentionsArray: self.mentionsArray)
+            let hashtagElements = ActiveBuilder.createElements(type: type, from: textString, range: textRange, filterPredicate: filter, mentionsArray: self.mentionsArray, linksIndex: self.linksIndex)
             activeElements[type] = hashtagElements
         }
 
