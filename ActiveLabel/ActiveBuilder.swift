@@ -102,7 +102,7 @@ struct ActiveBuilder {
                 }
                 else if filterPredicate?(word) ?? true {
                     let element = ActiveElement.create(with: type, text: word)
-                    if ((linksIndex?.contains(match.range.location)) != nil)  {
+                    if let linksIndex = linksIndex, linksIndex.contains(match.range.location) {
                         elements.append((match.range, element, type))
                     }
                 }
