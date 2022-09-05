@@ -22,49 +22,53 @@ struct ActiveBuilder {
             return createElements(from: text, for: type, range: range, minLength: 1, filterPredicate: filterPredicate, mentions: mentionsArray, linksIndex: linksIndex)
         }
     }
-
+    
     static func createURLElements(from text: String, range: NSRange, maximumLenght: Int?) -> ([ElementTuple], String) {
         let type = ActiveType.url
         var text = text
         let matches = RegexParser.getElements(from: text, with: type.pattern, range: range)
         var elements: [ElementTuple] = []
-
-        for match in matches where match.range.length > 2 {
-            let word = (text as NSString).substring(with: match.range)
+        var offset = 0
+        matches.forEach { match in
+            guard match.range.length > 2 else {
+                return
+            }
+            let word = (text as NSString)
+                .substring(with: .init(location: match.range.location - offset, length: match.range.length))
                 .trimmingCharacters(in: CharacterSet.whitespacesAndNewlines)
-            
             // handle url markdown [ URL ](link)
             if let (markdown, link) = text.extractLinkMarkdown(url: word) {
-                
-                let startRange = (text as NSString).range(of: markdown).lowerBound
-                text = text.replacingOccurrences(of: markdown, with: link)
-                let length = text.count - startRange
-                
-                let newRange = (text as NSString).range(of: link, range: NSRange(location: startRange, length: length))
-                let element = ActiveElement.url(original: word, trimmed: link)
-                                
-                elements.append((newRange, element, type))
-                continue
+                if let firstOccurence = text.range(of: markdown) {
+                    let startRange = (text as NSString).range(of: markdown).location
+                    text = text.replacingCharacters(in: firstOccurence, with: link)
+                    let newRange = (text as NSString).range(of: link, range: .init(location: startRange, length: link.count))
+                    let element = ActiveElement.url(original: word, trimmed: link)
+                    elements.append((newRange, element, type))
+                    offset += markdown.count - link.count
+                }
+                return
             }
-            
-            guard let maxLenght = maximumLenght, word.count > maxLenght else {
-                let range = maximumLenght == nil ? match.range : (text as NSString).range(of: word)
-                let element = ActiveElement.create(with: type, text: word)
-                elements.append((range, element, type))
-                continue
-            }
-            
             // Handle trimmed link
-            let trimmedWord = word.trim(to: maxLenght)
-            text = text.replacingOccurrences(of: word, with: trimmedWord)
-
-            let newRange = (text as NSString).range(of: trimmedWord)
-            let element = ActiveElement.url(original: word, trimmed: trimmedWord)
+            if let maximumLenght = maximumLenght, word.count > maximumLenght {
+                if let range = text.range(of: word) {
+                    let trimmedWord = word.trim(to: maximumLenght)
+                    text = text.replacingCharacters(in: range, with: trimmedWord)
+                    let startRange = (text as NSString).range(of: trimmedWord).location
+                    let newRange = (text as NSString).range(of: trimmedWord, range: .init(location: startRange, length: trimmedWord.count))
+                    let element = ActiveElement.url(original: word, trimmed: trimmedWord)
+                    elements.append((newRange, element, type))
+                    offset += word.count - trimmedWord.count
+                }
+                return
+            }
+            let startRange = (text as NSString).range(of: word).location
+            let newRange = (text as NSString).range(of: word, range: .init(location: startRange, length: word.count))
+            let element = ActiveElement.create(with: type, text: word)
             elements.append((newRange, element, type))
         }
         return (elements, text)
     }
-
+    
     private static func createElements(from text: String,
                                        for type: ActiveType,
                                        range: NSRange,
@@ -108,11 +112,11 @@ struct ActiveBuilder {
     }
     
     private static func extractMention(_ mentions: [MentionToPass]?,
-                             word: String,
-                             filterPredicate: ActiveFilterPredicate?,
-                             type: ActiveType,
-                             textCount: Int,
-                             match: NSTextCheckingResult) -> (word: String?, id: Int?, index: Int?, element: ActiveElement?, range: NSRange?) {
+                                       word: String,
+                                       filterPredicate: ActiveFilterPredicate?,
+                                       type: ActiveType,
+                                       textCount: Int,
+                                       match: NSTextCheckingResult) -> (word: String?, id: Int?, index: Int?, element: ActiveElement?, range: NSRange?) {
         if let mentionsArray = mentions, let mention = mentionsArray.first(where: {(word.contains($0.name))}) {
             let newId = mention.userId
             let word = mention.name
@@ -127,7 +131,7 @@ struct ActiveBuilder {
         }
         return (word: nil, id: nil, index: nil, element: nil, range: nil)
     }
-
+    
     
     private static func createElementsIgnoringFirstCharacter(from text: String,
                                                              for type: ActiveType,
@@ -136,7 +140,7 @@ struct ActiveBuilder {
         let matches = RegexParser.getElements(from: text, with: type.pattern, range: range)
         let nsstring = text as NSString
         var elements: [ElementTuple] = []
-
+        
         for match in matches where match.range.length > 2 {
             let range = NSRange(location: match.range.location + 1, length: match.range.length - 1)
             var word = nsstring.substring(with: range)
