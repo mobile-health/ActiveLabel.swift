@@ -8,15 +8,13 @@
 
 import Foundation
 
-typealias ActiveFilterPredicate = (String) -> Bool
+typealias ActiveFilterPredicate = ((String) -> Bool)
 
-// MARK: - ActiveBuilder
+struct ActiveBuilder {
 
-enum ActiveBuilder {
     static func createElements(type: ActiveType, from text: String, range: NSRange, filterPredicate: ActiveFilterPredicate?) -> [ElementTuple] {
         switch type {
-        case .hashtag,
-             .mention:
+        case .mention, .hashtag:
             return createElementsIgnoringFirstCharacter(from: text, for: type, range: range, filterPredicate: filterPredicate)
         case .url:
             return createElements(from: text, for: type, range: range, filterPredicate: filterPredicate)
@@ -56,11 +54,11 @@ enum ActiveBuilder {
     }
 
     private static func createElements(from text: String,
-                                       for type: ActiveType,
-                                       range: NSRange,
-                                       minLength: Int = 2,
-                                       filterPredicate: ActiveFilterPredicate?) -> [ElementTuple]
-    {
+                                            for type: ActiveType,
+                                                range: NSRange,
+                                                minLength: Int = 2,
+                                                filterPredicate: ActiveFilterPredicate?) -> [ElementTuple] {
+
         let matches = RegexParser.getElements(from: text, with: type.pattern, range: range)
         let nsstring = text as NSString
         var elements: [ElementTuple] = []
@@ -77,10 +75,9 @@ enum ActiveBuilder {
     }
 
     private static func createElementsIgnoringFirstCharacter(from text: String,
-                                                             for type: ActiveType,
-                                                             range: NSRange,
-                                                             filterPredicate: ActiveFilterPredicate?) -> [ElementTuple]
-    {
+                                                                  for type: ActiveType,
+                                                                      range: NSRange,
+                                                                      filterPredicate: ActiveFilterPredicate?) -> [ElementTuple] {
         let matches = RegexParser.getElements(from: text, with: type.pattern, range: range)
         let nsstring = text as NSString
         var elements: [ElementTuple] = []
