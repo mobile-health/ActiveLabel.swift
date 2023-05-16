@@ -8,13 +8,15 @@
 
 import Foundation
 
+// MARK: - ActiveElement
+
 enum ActiveElement {
     case mention(String)
     case hashtag(String)
     case email(String)
     case url(original: String, trimmed: String)
     case custom(String)
-    
+
     static func create(with activeType: ActiveType, text: String) -> ActiveElement {
         switch activeType {
         case .mention: return mention(text)
@@ -26,13 +28,15 @@ enum ActiveElement {
     }
 }
 
+// MARK: - ActiveType
+
 public enum ActiveType {
     case mention
     case hashtag
     case url
     case email
     case custom(pattern: String)
-    
+
     var pattern: String {
         switch self {
         case .mention: return RegexParser.mentionPattern
@@ -43,6 +47,8 @@ public enum ActiveType {
         }
     }
 }
+
+// MARK: Hashable, Equatable
 
 extension ActiveType: Hashable, Equatable {
     public func hash(into hasher: inout Hasher) {
